@@ -1,0 +1,61 @@
+
+.cityList{
+height: 100%;
+overflow: hidden;
+padding-top: 45px;
+// 头部
+    .navbar{
+        position: fixed;
+        top: 0;
+        left:0;
+        width: 100%;
+        background-color: #f4f4f4;
+    }
+    // 列表
+    .list{
+        background-color: #fff;
+        .title{
+            font-size: 14px;
+            padding: 10px 15px;
+            color: #999;
+        }
+        .name{
+            width: 100%;
+            height: 50px;
+            padding: 0 15px;
+            line-height: 50px;
+            border-bottom: 1px solid #eeeeee;
+            font-size: 16px;
+            color: #333;
+            background: #fff;
+            cursor: pointer;
+        }
+    }
+    // 索引列表
+    .renderIndex{
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        right: 5px;
+        z-index: 1;
+        height: 90%;
+        padding-top: 20px;
+        text-align: center;
+        li{
+            flex: 1;
+            box-sizing: border-box;
+            height: 15px;
+            width: 15px;
+            line-height: 15px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 12px;
+            margin-top: 8px;
+            &.active{
+                background-color: #21b97a;
+                color: #fff;
+              }
+        }
+    }
+    
+}

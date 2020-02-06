@@ -1,12 +1,15 @@
 import React from 'react'
-import { Carousel,Toast,Flex,Grid} from 'antd-mobile';
-import axios from 'axios'
+import { Carousel,Flex,Grid} from 'antd-mobile';
+import {API} from '../../utils/api'
 import './index.scss'
+import {getCurrentCity} from '../../utils'
 // 获取nav图标
 import nav1 from '../../assets/images/nav-1.png'
 import nav2 from '../../assets/images/nav-2.png'
 import nav3 from '../../assets/images/nav-3.png'
 import nav4 from '../../assets/images/nav-4.png'
+import SearchHeader from '../../components/SearchHeader'
+import { BASE_URL } from '../../utils/url'
 // 设置nav数据 方便循环
 const menus = [
   {id:1, name: '整租', imgSrc: nav1, path: '/home/list' },
@@ -26,49 +29,37 @@ export default class Index extends React.Component{
         news:[],
         currentCity:''
     }
-    // 获取轮播图数据
-    async getSwiper(){
-        const res = await axios.get('http://localhost:8080/home/swiper')
-        if(res.data.status===200){
-            this.setState({
-              swipers: res.data.body
-          },()=>{
-            this.setState({
-                autoPlay:true
-            })
-          });
-        }
-    }
+
     componentDidMount() {
-        // 在获取前进行提示加载中
-        this.loadingToast()
         // 获取焦点图数据 
         this.getSwiper()
         // 获取租房小组数据
         this.getGroups()
         // 获取资讯数据
         this.getNews()
-        // 获取定位数据
-        this.getCurrentCity()
-
+        // 获取定位城市
+        this.getCCity()
     }
-    // 根据用户IP 返回城市级别的定位结果
-    getCurrentCity=()=>{
-      let myFun=(result)=>{
-        var cityName = result.name;
-        this.setState({
-          currentCity:cityName
-        })
+    // 获取轮播图数据
+      async getSwiper(){
+        const data = await API.get('/home/swiper')
+        if(data.status===200){
+            this.setState({
+              swipers: data.body
+          },()=>{
+            this.setState({
+                autoPlay:true
+            })
+          });
+        }
       }
-      // 
-      var myCity = new window.BMap.LocalCity();
-      myCity.get(myFun); 
+    // 获取定位数据
+    getCCity= async ()=>{
+      let dingwei = await getCurrentCity()
+      this.setState({
+        currentCity:dingwei.label
+      })
     }
-    // 提示加载中
-    loadingToast=()=>{
-        Toast.loading('Loading...', 1, () => {
-        });
-      }
     //渲染轮播图结构
     renderSwiper=()=>{
       // 如果准备好了数据再渲染
@@ -83,7 +74,7 @@ export default class Index extends React.Component{
                 style={{ display: 'inline-block', width: '100%', height: this.state.imgHeight }}
               >
                 <img
-                  src={`http://localhost:8080${val.imgSrc}`}
+                  src={BASE_URL+val.imgSrc}
                   alt=""
                   style={{ width: '100%', verticalAlign: 'top' }}
                   onLoad={() => {
@@ -95,8 +86,6 @@ export default class Index extends React.Component{
               </a>
             ))}
             </Carousel>
-        }else{
-            return <Carousel></Carousel>
         }
     }
     // 渲染nav导航
@@ -110,10 +99,10 @@ export default class Index extends React.Component{
     }
     // 获取租房小组数据
     async getGroups(){
-      const res = await axios.get('http://localhost:8080/home/groups?area=AREA%7C88cff55c-aaa4-e2e0')
-      if(res.data.status===200){
+      const data = await API.get('/home/groups?area='+getCurrentCity.value)
+      if(data.status===200){
         this.setState({
-          groups: res.data.body
+          groups: data.body
           })
       }
     }
@@ -130,7 +119,7 @@ export default class Index extends React.Component{
               <p>{el.desc}</p>
             </Flex.Item>
             <Flex.Item>
-            <img src={'http://localhost:8080'+el.imgSrc} alt="" />
+            <img src={BASE_URL+el.imgSrc} alt="" />
             </Flex.Item>
           </Flex>
         )
@@ -141,16 +130,18 @@ export default class Index extends React.Component{
     }
     // 获取资讯数据
     async getNews(){
-      const res = await axios.get('http://localhost:8080/home/news?area=AREA%7C88cff55c-aaa4-e2e0')
-      this.setState({
-        news:res.data.body
-      })
+      const data = await API.get('/home/news?area=AREA'+getCurrentCity.value)
+      if(data.status===200){
+        this.setState({
+          news:data.body
+        })
+      }
     }
     // 渲染资讯数据
     renderNewsLi(){
       return this.state.news.map(item=>(
         <div className="newsContent" key={item.id}>
-          <img src={'http://localhost:8080'+item.imgSrc} alt=""/>
+          <img src={BASE_URL+item.imgSrc} alt=""/>
           <div className="rbox">
             <h5>{item.title}</h5>
             <p>
@@ -164,23 +155,7 @@ export default class Index extends React.Component{
     }
     // 渲染搜素结构
     renderSearch(){
-      return <div className="searchBox">
-        <div className="inputbg">
-          <div onClick={this.goCity} className="city"><span>{this.state.currentCity}</span></div>
-          <div className="inputk">
-            <input type="text" placeholder="请输入小区名或地址"/>
-          </div>
-          {/* <i className="iconfont icon-seach"></i> */}
-        </div>
-        <i className="iconfont icon-map" onClick={this.goMap}></i>
-
-      </div>
-    }
-    goCity=()=>{
-      this.props.history.push('/city')
-    }
-    goMap=()=>{
-      this.props.history.push('/map')
+      return <SearchHeader cityName={this.state.currentCity}></SearchHeader>
     }
     // 页面渲染
     render(){

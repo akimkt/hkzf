@@ -2,7 +2,7 @@ import React from 'react'
 import {Route} from 'react-router-dom'
 // 引入子组件
 import Index from '../Index'
-import List from '../List'
+import HouseList from '../HouseList'
 import News from '../News'
 import Profile from '../Profile'
 // 导入TabBar
@@ -38,7 +38,7 @@ const tabs = [
 
 export default class Home extends React.Component{
     state = {
-        selectedTab: '/home/index',
+        selectedTab: window.location.pathname,
         hidden: false
     }
     
@@ -63,7 +63,7 @@ export default class Home extends React.Component{
         return <div className="home">
             {/* 子路由组件位置 */}
             <Route path="/home/index" component={Index}></Route>
-            <Route path="/home/list" component={List}></Route>
+            <Route path="/home/houselist" component={HouseList}></Route>
             <Route path="/home/news" component={News}></Route>
             <Route path="/home/profile" component={Profile}></Route>
             <TabBar
