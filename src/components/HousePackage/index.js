@@ -69,7 +69,7 @@ export default class HousePackage extends Component {
     selectedNames: []
   }
 
-  // 根据id切换选中状态
+  // 点击房屋配置单项时，根据id切换选中状态
   toggleSelect = name => {
     const { selectedNames } = this.state
     let newSelectedNames

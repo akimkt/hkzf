@@ -5,6 +5,14 @@ import City from './pages/City'
 import Map from './pages/Map'
 import HouseDetail from './pages/HouseDetail'
 import Login from './pages/Login'
+import Registe from './pages/Registe'
+import Profile from './pages/Profile'
+import Rent from './pages/Rent'
+import RentAdd from './pages/Rent/Add'
+import RentSearch from './pages/Rent/Search'
+import Favorate from './pages/Favorate'
+
+import AuthRoute from './components/AuthRoute'
 class App extends React.Component {
   render(){
     return (
@@ -23,6 +31,12 @@ class App extends React.Component {
           <Route exact path="/city" component={City}></Route>
           <Route exact path="/hsdetail/:id" component={HouseDetail}></Route>
           <Route exact path="/login" component={Login}></Route>
+          <Route exact path="/registe" component={Registe}></Route>
+          <Route exact path="/profile" component={Profile}></Route>
+          <AuthRoute exact={true} path="/rent" Page={Rent}></AuthRoute>
+          <AuthRoute exact={true} path="/rent/add" Page={RentAdd}></AuthRoute>
+          <AuthRoute exact={true} path="/rent/search" Page={RentSearch}></AuthRoute>
+          <AuthRoute exact={true} path="/favorate" Page={Favorate}></AuthRoute>
         </div>
       </Router>
     )

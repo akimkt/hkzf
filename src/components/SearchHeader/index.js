@@ -2,7 +2,8 @@ import React from 'react'
 import {withRouter} from 'react-router-dom'
 import PropTypes from 'prop-types'
 let SearchHeader = (props)=>{
-  return <div className="searchBox">
+  // console.log('classname',props)
+  return <div className={["searchBox"].join(' ')}>
   <div className="inputbg">
     <div onClick={()=>{props.history.push('/city')}} className="city">
       <span>{props.cityName}</span>

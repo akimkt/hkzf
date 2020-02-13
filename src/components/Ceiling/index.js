@@ -36,7 +36,7 @@ class Ceiling extends React.Component{
         */}
         <div className="placeholder" ref={this.pRef}></div>
         {/* 吸顶组件包裹的内容 */}
-        <div ref={this.cRef} className="content">
+        <div ref={this.cRef} className="ceilings_content">
             {this.props.children}
         </div>
         

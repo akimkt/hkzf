@@ -1,5 +1,5 @@
 import React from 'react'
-import { Carousel,Flex,Grid} from 'antd-mobile';
+import { Carousel,Flex,Grid, Toast} from 'antd-mobile';
 import {API} from '../../utils/api'
 import './index.scss'
 import {getCurrentCity} from '../../utils'
@@ -12,8 +12,8 @@ import SearchHeader from '../../components/SearchHeader'
 import { BASE_URL } from '../../utils/url'
 // 设置nav数据 方便循环
 const menus = [
-  {id:1, name: '整租', imgSrc: nav1, path: '/home/list' },
-  {id:2, name: '合租', imgSrc: nav2, path: '/home/list' },
+  {id:1, name: '整租', imgSrc: nav1, path: '/home/houselist' },
+  {id:2, name: '合租', imgSrc: nav2, path: '/home/houselist' },
   {id:3, name: '地图找房', imgSrc: nav3, path: '/map' },
   {id:4, name: '去出租', imgSrc: nav4, path: '/rent/add' }
 ]
@@ -31,14 +31,15 @@ export default class Index extends React.Component{
     }
 
     componentDidMount() {
+        // 获取定位城市
+        this.getCCity()
         // 获取焦点图数据 
         this.getSwiper()
         // 获取租房小组数据
         this.getGroups()
         // 获取资讯数据
         this.getNews()
-        // 获取定位城市
-        this.getCCity()
+
     }
     // 获取轮播图数据
       async getSwiper(){
@@ -55,6 +56,7 @@ export default class Index extends React.Component{
       }
     // 获取定位数据
     getCCity= async ()=>{
+      Toast.loading('加载中',0)
       let dingwei = await getCurrentCity()
       this.setState({
         currentCity:dingwei.label
@@ -70,7 +72,7 @@ export default class Index extends React.Component{
             {this.state.swipers.map(val => (
               <a
                 key={val.id}
-                href="http://www.akimkt.com"
+                href="http://hkzf.blognet.cn"
                 style={{ display: 'inline-block', width: '100%', height: this.state.imgHeight }}
               >
                 <img
@@ -91,7 +93,7 @@ export default class Index extends React.Component{
     // 渲染nav导航
     renderNav(){
         return <Flex className="navbox">
-          {menus.map(item=>(<Flex.Item onClick={()=>this.props.history.push(item.path)} key={item.id}>
+          {menus.map(item=>(<Flex.Item onClick={()=>this.props.history.push(item.path,{name:item.name})} key={item.id}>
             <img src={item.imgSrc} alt="" />
             <h4>{item.name}</h4>
         </Flex.Item>))}
@@ -136,6 +138,7 @@ export default class Index extends React.Component{
           news:data.body
         })
       }
+      Toast.hide()
     }
     // 渲染资讯数据
     renderNewsLi(){

@@ -18,6 +18,7 @@ export default class Map extends Component {
     }
     // 初始化地图
     InitMap= async ()=>{
+        
         //地图实例后面还需要用，所以创建成当前组件的内置变量
         this.map = new BMap.Map("container"); // 创建地图实例
         //  1. 获取城市名称 解构赋值，把对象里label的值赋值给word了,value是id
@@ -41,13 +42,14 @@ export default class Map extends Component {
     }
     // 获取租房数据和渲染租房数据
     renderOverlays= async (id,shape)=>{
+        Toast.loading('加载中',0)
         let data = await API.get('/area/map?id='+id)
         if(data.status){
             data.body.forEach(item=>{
                     this.creatOverlay(item,shape)
-            })               
+            })
         }
-
+        Toast.hide()
     }
     // 创建单个渲染层的渲染方法
     creatOverlay(item ,shape){
@@ -70,7 +72,7 @@ export default class Map extends Component {
             <p>${item.label}</p>
             <p>${item.count}套</p>
         </div>
-        `)
+        `);
         // 给每个覆盖层设置监听点击事件
         label.addEventListener('click',(e)=>{
             // 获取点击的坐标
@@ -111,7 +113,8 @@ export default class Map extends Component {
             // 重新请求和渲染覆盖层 传一个字符串矩形
             this.renderOverlays(id,'squar')
         }else if(zoom===15){
-            this.showHouseList(id,'squar')
+            console.log('展示列表')
+            this.showHouseList(id)
             this.map.addEventListener('movestart',()=>{
                 this.setState({
                     showList:false
@@ -129,7 +132,6 @@ export default class Map extends Component {
             }
         })
         Toast.hide()
-        console.log(data)
         if(data.status===200){
             this.setState({
                 list:data.body.list,
@@ -142,7 +144,7 @@ export default class Map extends Component {
     renderList=()=>{
         if(this.state.list.length){
             return this.state.list.map(item=>(
-                <div key={item.houseCode} className={styles.li}>
+                <div key={item.houseCode} className={styles.li} onClick={()=>{this.props.history.push('/hsdetail/'+item.houseCode)}}>
                     <img src={'http://localhost:8080'+item.houseImg} alt={item.title}/>
                     <div className={styles.item}>
                         <div className={styles.housetit}>{item.title}</div>

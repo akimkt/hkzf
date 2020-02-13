@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-import { Carousel, Flex } from 'antd-mobile'
+import { Carousel, Flex, Modal, Toast } from 'antd-mobile'
 
 import NavHeader from '../../components/NavHeader'
 import HouseItem from '../../components/HouseItem'
@@ -10,6 +10,8 @@ import { BASE_URL } from '../../utils/url'
 
 import styles from './index.module.css'
 import {API} from '../../utils/api'
+import {isAuth} from '../../utils/token'
+
 // 猜你喜欢
 const recommendHouses = [
   {
@@ -59,7 +61,7 @@ const labelStyle = {
 export default class HouseDetail extends Component {
   state = {
     isLoading: true,
-
+    isFavorite:false,
     houseInfo: {
       // 房屋图片
       slides: [],
@@ -70,11 +72,11 @@ export default class HouseDetail extends Component {
       // 租金
       price: 0,
       // 房型
-      roomType: '两室一厅',
+      roomType: '',
       // 房屋面积
       size: 89,
       // 装修类型
-      renovation: '精装',
+      renovation: '',
       // 朝向
       oriented: [],
       // 楼层
@@ -98,15 +100,21 @@ export default class HouseDetail extends Component {
   componentDidMount() {
     // 获取房屋详情信息
     this.gethousedetail()
+    // 确认是否已收藏
+    this.getFavorite()
   }
   gethousedetail= async ()=>{
     let id = this.props.match.params.id
     let res = await API.get('/houses/'+id)
     if(res.status===200){
       let data = res.body
+      let newdata = {
+        ...this.state.houseInfo,
+        ...data
+      }
       // 保存数据
       this.setState({
-        houseInfo:data,
+        houseInfo:newdata,
         isLoading:false
       })
 
@@ -156,9 +164,59 @@ export default class HouseDetail extends Component {
     `)
     map.addOverlay(label)
   }
+  // 确认是否已收藏
+  getFavorite= async ()=>{
+    // 如果已登录，才操作
+    if(isAuth){
+      //获取当前房屋id
+      let id = this.props.match.params.id
+      // 发送请求获取当前房屋是否收藏
+      let res = await API.get('/user/favorites/'+id)
+      console.log(res)
+      // 获取获取成功就赋值
+      if(res.status===200){
+        this.setState({
+          isFavorite:res.body.isFavorite
+        })
+      }//如果获取不成功，应该处理错误问题，比如token过期,比如没有登录
+      else if(res.status===400){
+        //根据需求操作，如果不需要处理，则默认未收藏
+      }
+    }
+  }
+  // 点击收藏或取消收藏
+  handelfavorite= async()=>{
+    // 如果没有登录，提示需要登录后才能收藏
+    if(!isAuth()){
+      Modal.alert('登录提示', '登录后才能收藏', [
+        { text: '取消', onPress: () =>{}},
+        { text: '去登陆', onPress: () => this.props.history.push('/login') },
+      ])
+    }else{
+      // 获取当前传参 房屋id
+      let id = this.props.match.params.id
+      // 如果已登录执行收藏或取消收藏
+      if(this.state.isFavorite){// 如果已收藏发请求取消收藏
+        let res = await API.delete('/user/favorites/'+id)
+        if(res.status===200){
+          this.setState({
+            isFavorite:false
+          })
+        }
 
+      }else{// 否则收藏
+        let res = await API.post('/user/favorites/'+id)
+        if(res.status===200){
+          this.setState({
+            isFavorite:true
+          })
+          Toast.success('收藏成功',2)
+        }
+      }
+    }
+  }
   render() {
-    const { isLoading } = this.state
+    const { isLoading,houseInfo:{price,roomType,size,renovation,floor,oriented,community,title,supporting} } = this.state
     return (
       <div className={styles.root}>
         {/* 导航栏 */}
@@ -166,9 +224,8 @@ export default class HouseDetail extends Component {
           className={styles.navHeader}
           rightContent={[<i key="share" className="iconfont icon-share" />]}
         >
-          {this.state.houseInfo.title||''}
+          {title}
         </NavHeader>
-
         {/* 轮播图 */}
         <div className={styles.slides}>
           {!isLoading ? (
@@ -183,7 +240,7 @@ export default class HouseDetail extends Component {
         {/* 房屋基础信息 */}
         <div className={styles.info}>
           <h3 className={styles.infoTitle}>
-            整租 · 精装修，拎包入住，配套齐Q，价格优惠
+            {}
           </h3>
           <Flex className={styles.tags}>
             <Flex.Item>
@@ -196,17 +253,17 @@ export default class HouseDetail extends Component {
           <Flex className={styles.infoPrice}>
             <Flex.Item className={styles.infoPriceItem}>
               <div>
-                8500
+                {price}
                 <span className={styles.month}>/月</span>
               </div>
               <div>租金</div>
             </Flex.Item>
             <Flex.Item className={styles.infoPriceItem}>
-              <div>1室1厅1卫</div>
+          <div>{roomType}</div>
               <div>房型</div>
             </Flex.Item>
             <Flex.Item className={styles.infoPriceItem}>
-              <div>78平米</div>
+              <div>{size}平米</div>
               <div>面积</div>
             </Flex.Item>
           </Flex>
@@ -215,16 +272,16 @@ export default class HouseDetail extends Component {
             <Flex.Item>
               <div>
                 <span className={styles.title}>装修：</span>
-                精装
+                {renovation||'精装修'}
               </div>
               <div>
                 <span className={styles.title}>楼层：</span>
-                低楼层
+                {floor}
               </div>
             </Flex.Item>
             <Flex.Item>
               <div>
-                <span className={styles.title}>朝向：</span>南
+                <span className={styles.title}>朝向：</span>{oriented.join('、')}
               </div>
               <div>
                 <span className={styles.title}>类型：</span>普通住宅
@@ -237,7 +294,7 @@ export default class HouseDetail extends Component {
         <div className={styles.map}>
           <div className={styles.mapTitle}>
             小区：
-            <span>天山星城</span>
+            <span>{community}</span>
           </div>
           <div className={styles.mapContainer} id="map">
             地图
@@ -248,16 +305,7 @@ export default class HouseDetail extends Component {
         <div className={styles.about}>
           <div className={styles.houseTitle}>房屋配套</div>
           <HousePackage
-            list={[
-              '电视',
-              '冰箱',
-              '洗衣机',
-              '空调',
-              '热水器',
-              '沙发',
-              '衣柜',
-              '天然气'
-            ]}
+            list={supporting}
           />
           {/* <div className="title-empty">暂无数据</div> */}
         </div>
@@ -301,14 +349,14 @@ export default class HouseDetail extends Component {
         </div>
 
         {/* 底部收藏按钮 */}
-        <Flex className={styles.fixedBottom} justify="center">
-          <Flex.Item>
+        <Flex className={styles.fixedBottom}>
+          <Flex.Item onClick={this.handelfavorite}>
             <img
-              src={BASE_URL + '/img/unstar.png'}
+              src={BASE_URL + (this.state.isFavorite?'/img/star.png':'/img/unstar.png')}
               className={styles.favoriteImg}
               alt="收藏"
             />
-            <span className={styles.favorite}>收藏</span>
+            <span className={styles.favorite}>{this.state.isFavorite?'已收藏':'收藏' }</span>
           </Flex.Item>
           <Flex.Item>在线咨询</Flex.Item>
           <Flex.Item>

@@ -1,13 +1,22 @@
 .houselist{
     height: 100%;
+    width:100%;
     background-color: #fff;
-    .header{
+    position: relative;
+    .listtop{
         display:flex;
         height: 45px;
         align-items:center;
         background-color: #eee;
         padding: 10px 5px;
         width: 100%;
+        & :global(.searchBox){
+            position: relative;
+            top: 0;
+            // 下面这两个 以前写的样式影响了 后面你正常写没问题的 这个样式是我以前写的 互相有影响了
+            left: 0;
+            transform: none;
+        }
     }
         .li{
             display: flex;

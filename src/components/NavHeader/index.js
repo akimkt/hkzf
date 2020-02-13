@@ -13,7 +13,7 @@ class NavHeader extends Component {
         rightContent={this.props.rightContent}
         mode="dark"
         icon={<Icon type="left" />}
-    onLeftClick={() =>this.props.history.goBack()}>{this.props.children}</NavBar>
+    onLeftClick={() =>this.props.history.go(-1)}>{this.props.children}</NavBar>
     );
   }
 }

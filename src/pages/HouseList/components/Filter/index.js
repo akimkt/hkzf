@@ -135,6 +135,7 @@ export default class Filter extends Component {
       filters.mode= newselVal.mode[0]
       filters.more=newselVal.more.join(',')// 后端要求筛选数据以,拼接成字符串
       filters.price=newselVal.price[0]
+
       // 将处理后的数据传给houselist
       this.props.onFilters(filters)
     })

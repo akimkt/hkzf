@@ -1,7 +1,8 @@
 .root {
-  position: relative;
+  /* position: relative; */
   padding-bottom: 50px;
   background-color: #f6f5f6;
+  /* overflow: hidden; */
 }
 
 .root :global(.am-navbar-title) {
@@ -212,6 +213,7 @@
 }
 
 .fixedBottom {
+  z-index: 999;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -219,19 +221,13 @@
   height: 50px;
   line-height: 50px;
   border-top: 1px solid #cecece;
-  text-align: center;
   font-size: 17px;
   color: #999;
   background-color: #fff;
-  
-}
-.fixedBottom :global(.am-flexbox-item){
-  text-align: center;
 }
 
 .favorite {
   margin-left: 6px;
-  text-align: center;
 }
 
 .favoriteImg {
@@ -240,11 +236,13 @@
 
 .fixedBottom :global(div:first-child) {
   border-right: solid 1px #e8e8e9;
+  text-align: center;
 }
 
 .fixedBottom :global(div:last-child) {
   border-right: solid 1px #e8e8e9;
   background-color: #21b97a;
+  text-align: center;
 }
 
 .telephone {

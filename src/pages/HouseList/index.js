@@ -16,7 +16,8 @@ export default class HouseList extends React.Component{
         currentCity:'',
         list:[],
         count:0,
-        isLoaded:false
+        isLoaded:false,
+        pushData:''
     }
     filters={}// 默认查询条件为空对象注册到houselist组件中，当用户选择查询条件后赋值
     componentDidMount(){
@@ -30,43 +31,44 @@ export default class HouseList extends React.Component{
             currentCity:dingwei.label
         },()=>{
             // 获取到定位后发送请求获取所有租房数据
-            this.getHouseList()
+                this.getHouseList()
+            
         })
-        }
-        // 循环 渲染房屋列表
-        rowRenderer=({key, index, style}) => {
-        let item = this.state.list[index]
-        // 上拉加载的判断是否有值,数据还没回来不执行渲染,而是提示加载中，解决加载渲染时数据还没回来报错的问题
-        if(!item){
-            return (
-                <div key={key} style={style}>
-                    <p className={styles.loading}>加载中</p>
-                </div>
-            )
-        }
+    }
+    // 循环 渲染房屋列表
+    rowRenderer=({key, index, style}) => {
+    let item = this.state.list[index]
+    // 上拉加载的判断是否有值,数据还没回来不执行渲染,而是提示加载中，解决加载渲染时数据还没回来报错的问题
+    if(!item){
         return (
-            <div 
-            key={key} 
-            style={style}  
-            className={styles.li}
-            onClick = {()=>{this.props.history.push('/hsdetail/'+item.houseCode)}}
-            >
-                        <img src={BASE_URL+item.houseImg} alt={item.title}/>
-                        <div className={styles.item}>
-                            <div className={styles.housetit}>{item.title}</div>
-                            <div className={styles.desc}>{item.desc}</div>
-                            <div className={styles.tags}>
-                                {item.tags.map((tag,index)=>(
-                                    <div className={styles['tag'+index]} key={index}>{tag}</div>
-                                ))}
-                            </div>
-                            <div className={styles.price}>
-                                <b>{item.price}</b>元/月
-                            </div>
-                        </div>
+            <div key={key} style={style}>
+                <p className={styles.loading}>加载中</p>
             </div>
-            );
-      }
+        )
+    }
+    return (
+        <div 
+        key={key} 
+        style={style}  
+        className={styles.li}
+        onClick = {()=>{this.props.history.push('/hsdetail/'+item.houseCode)}}
+        >
+                    <img src={BASE_URL+item.houseImg} alt={item.title}/>
+                    <div className={styles.item}>
+                        <div className={styles.housetit}>{item.title}</div>
+                        <div className={styles.desc}>{item.desc}</div>
+                        <div className={styles.tags}>
+                            {item.tags.map((tag,index)=>(
+                                <div className={styles['tag'+index]} key={index}>{tag}</div>
+                            ))}
+                        </div>
+                        <div className={styles.price}>
+                            <b>{item.price}</b>元/月
+                        </div>
+                    </div>
+        </div>
+        );
+    }
     // 当用户保存筛选条件时传值过来，在houselist中接收，
     onFilters= (filters)=>{
         // 如果用户的筛选条件没有变，不重新发请求
@@ -82,6 +84,15 @@ export default class HouseList extends React.Component{
     }
     // 发请求获取指定条件的房屋数据
     getHouseList = async ()=>{
+        Toast.loading('加载中',0)
+        let {state} = this.props.location
+        if(state){
+            if(state.name==='整租'){
+                this.filters.mode=true
+            }else if(state.name==='合租'){
+                this.filters.mode=false
+            }
+        }
         let data = await API.get('/houses',{
             params:{
                 cityId:this.state.currentCity.value,
@@ -90,8 +101,11 @@ export default class HouseList extends React.Component{
                 end:20
             }
         })
+        
         if(data.status===200 && data.body.count !== 0){
+            Toast.hide()
             Toast.info(`总计${data.body.count}条数据`,2)
+            
             this.setState({
                 list:data.body.list,
                 count:data.body.count,
@@ -102,11 +116,12 @@ export default class HouseList extends React.Component{
         }
     }
     isRowLoaded=({index})=>{
-        //当前索引有数据则返回true，反正为false,综合条件InfiniteLoader会触发loadMoreRows
+        //当前索引有数据则返回true，否则为false,综合条件InfiniteLoader会触发loadMoreRows
         return !!this.state.list[index]
     }
     // 加载更多数据
     loadMoreRows=({ startIndex, stopIndex })=>{
+        Toast.loading('加载中',0)
         return new Promise((resovle,reject)=>{
             API.get('/houses',{
                 params:{
@@ -116,15 +131,18 @@ export default class HouseList extends React.Component{
                     end:stopIndex
                 }
             }).then((data)=>{
+                Toast.hide()
                 if(data.status===200){
                     this.setState({
                         list:[...this.state.list,...data.body.list]
                     })
                     resovle()
                 }else{
-                    return data
+                    Toast.hide()
+                    reject(data)
                 }
             })
+            
         })
     }
     // 渲染列表页
@@ -161,7 +179,7 @@ export default class HouseList extends React.Component{
             </WindowScroller>
             )}
         </InfiniteLoader>
-        )    
+        )
 
             // 如果已经请求完了，并且没有数据，提示
         }else if(isLoaded===true && count===0 ){
@@ -174,24 +192,27 @@ export default class HouseList extends React.Component{
     }
     render(){
         return <div className={styles.houselist}>
-            
+            {/* 过度动画react-spring */}
             <Spring
                 from = {{opacity:0}}
                 to={{opacity:1}}>
                 {
                 (props)=>{
-                return <div style={props} className={styles.header}>
-                <i className="iconfont icon-back"></i>
+                    console.log('检查输出次数')
+                return <div style={props} className={styles.listtop}>
+                    <i className="iconfont icon-back"></i>
                     <SearchHeader cityName={ this.state.currentCity}></SearchHeader>
                 </div>
                 }
                 }
             </Spring>
             <Ceiling height={40}>
-                <Filter onFilters={this.onFilters}></Filter>
+                <Filter onFilters={this.onFilters} pushData={this.state.pushData}></Filter>
             </Ceiling>
             {/* 渲染租房数据列表 */}
+            <>
             {this.renderList()}
+            </>
         </div>
     }
 }

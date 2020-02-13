@@ -1,54 +1,20 @@
 import React, { Component } from 'react'
-import { Flex, WingBlank, WhiteSpace,Toast } from 'antd-mobile'
-
 import { Link } from 'react-router-dom'
-
+import { Flex, WingBlank, WhiteSpace,Toast } from 'antd-mobile'
 import NavHeader from '../../components/NavHeader'
 
 import styles from './index.module.css'
 import {API} from '../../utils/api'
+import { withFormik,Form, Field, ErrorMessage } from 'formik';
+import * as yup from 'yup'
+import {setToken} from '../../utils/token'
+// import { string, object } from 'yup';
 
 // 验证规则：
 // const REG_UNAME = /^[a-zA-Z_\d]{5,8}$/
 // const REG_PWD = /^[a-zA-Z_\d]{5,12}$/
 
 class Login extends Component {
-  state={
-    username:'test2',
-    password:'test2'
-  }
-  // 输入框内字符改变时，如果改变后的值不为空，保存
-  datachange=(e)=>{
-    if(e.target.value){
-      this.setState({
-        [e.target.name]:e.target.value
-      })
-    }
-  }
-  // 点击登录提交登录
-  handlesubmit= async (e)=>{
-    e.preventDefault()
-    let {username , password} = this.state
-    //校验用户名
-    let RegUser = /^[a-zA-Z]\w{4,10}$/
-    if(!username.trim()||!RegUser.test(username)){
-      Toast.info('用户名错误',2)
-      return false
-    }
-    // 校验密码
-    let RegP = /^[a-zA-Z]\w{4,15}$/
-    if(!password.trim()||!RegP.test(password)){
-      Toast.info('密码错误',2)
-      return false
-    }
-    // 发送登录请求，登录成功存储token
-    let res = await API.post('/user/login',this.state)
-    if(res.status===200){
-      Toast.success('登录成功',1)
-      let {token} = res.body
-      window.localStorage.setItem('hkzftoken',token)
-    }
-  }
   render() {
     return (
       <div className={styles.root}>
@@ -58,36 +24,33 @@ class Login extends Component {
 
         {/* 登录表单 */}
         <WingBlank>
-          <form onSubmit={this.handlesubmit}>
+          <Form>
             <div className={styles.formItem}>
-              <input
-                value={this.state.username}
-                onChange={this.datachange}
+              <Field
                 className={styles.input}
                 name="username"
                 placeholder="请输入账号"
               />
             </div>
-            {/* 长度为5到8位，只能出现数字、字母、下划线 */}
-            {/* <div className={styles.error}>账号为必填项</div> */}
+            <ErrorMessage className={styles.error} name="username"/>
+            {/* 如果有对应的错误就显示错误 */}
+            {/* {errors.username && <div >{errors.username}</div> } */}
             <div className={styles.formItem}>
-              <input
-                value={this.state.password}
-                onChange={this.datachange}
+              <Field
                 className={styles.input}
                 name="password"
                 type="password"
                 placeholder="请输入密码"
               />
             </div>
-            {/* 长度为5到12位，只能出现数字、字母、下划线 */}
-            {/* <div className={styles.error}>账号为必填项</div> */}
+            <ErrorMessage className={styles.error} name="password"/>
+            {/* {errors.password && <div className={styles.error}>{errors.password}</div> } */}
             <div className={styles.formSubmit}>
               <button className={styles.submit} type="submit">
                 登 录
               </button>
             </div>
-          </form>
+          </Form>
           <Flex className={styles.backHome}>
             <Flex.Item>
               <Link to="/registe">还没有账号，去注册~</Link>
@@ -99,4 +62,41 @@ class Login extends Component {
   }
 }
 
-export default Login
+export default withFormik({
+  // 将表单中的数据以对象Values添加到Props中进行交互
+  mapPropsToValues: () => ({ username:'ssn104',password:'07162534' }),
+  // 校验方式1  validate
+/*   validate: values => {
+    const errors = {};
+    if (values.username==='') {
+      errors.username = '用户名不能为空';
+    }
+    if(values.password===''){
+      errors.password ='密码不能为空'
+    }
+    return errors;
+  }, */
+  // 校验方式2
+  validationSchema:yup.object().shape({
+    username:yup.string().required('用户名不能为空').matches(/^[a-zA-Z]\w{5,11}$/,'必须以字母开头长度为6到12位，只能出现数字、字母、下划线'),
+    password:yup.string().required('密码不能为空').matches(/^\w{6,16}$/,'长度为6到16位，只能出现数字、字母、下划线'),
+  }),
+  // 点击提交的处理函数
+  handleSubmit: async (values, { props }) => {
+    // 发送登录请求，登录成功存储token
+
+    let res = await API.post('/user/login',values)
+    if(res.status===200){
+      Toast.success('登录成功',1) 
+      setToken(res.body.token)
+      // 如果有来源地址就跳回来源页面，否则就跳回上一页
+      if(props.location.state){
+        props.history.push(props.location.state.from)
+      }
+      else{
+        props.history.go(-1)
+      }
+      
+    }
+  }
+})(Login)
